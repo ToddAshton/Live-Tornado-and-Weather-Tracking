@@ -10,6 +10,9 @@
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { height: 100vh; }
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 </head>
 <body>
   <div id="map"></div>
@@ -150,9 +153,9 @@ async function fetchOpenWeatherGlobalAlerts() {
   return data.main || {};
 }
 
-const map = L.map('map').setView([30, -95], 3.5); // Center of USA
+const map = L.map('map').setView([30, -95], 3.5);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const baseLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 18,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -174,9 +177,22 @@ const map = L.map('map').setView([30, -95], 3.5); // Center of USA
       style: { color: 'red', weight: 2, fillColor: 'red', fillOpacity: 0.4 }
     }).addTo(map);
     let hailLayer = L.layerGroup().addTo(map);
-    let alertLayer = L.layerGroup().addTo(map);
-let fireLayer = L.layerGroup().addTo(map);
-let emergencyLayer = L.layerGroup().addTo(map);
+    let alertLayer = L.markerClusterGroup();
+map.addLayer(alertLayer);
+let fireLayer = L.markerClusterGroup();
+map.addLayer(fireLayer);
+let emergencyLayer = L.markerClusterGroup();
+map.addLayer(emergencyLayer);
+
+    const overlays = {
+      "Tornado Watches": watchLayer,
+      "Tornado Warnings": warningLayer,
+      "General Alerts": alertLayer,
+      "Fires": fireLayer,
+      "Emergency Alerts": emergencyLayer
+    };
+
+    L.control.layers(null, overlays, { collapsed: false }).addTo(map);
 
 fetchTornadoData();
 fetchCanadaAlerts();
@@ -259,5 +275,33 @@ alertLayer.addLayer(marker);
     
     
   </script>
+<div style="position: absolute; top: 10px; right: 10px; background: white; padding: 10px; z-index: 1000; border-radius: 8px; font-size: 14px;">
+  <strong>Legend:</strong><br>
+  <span style="color:red;">⬤</span> Tornado Warning<br>
+  <img src="https://cdn-icons-png.flaticon.com/512/616/616655.png" width="16" height="16"> Tornado Watch<br>
+  <span style="color:blue;">⬤</span> General Alert<br>
+  <span style="color:purple;">⬤</span> Canada Alert<br>
+  <span style="color:orange;">⬤</span> Fire / Global Alert<br>
+  <span style="color:black;">⬤</span> Emergency Alert
+</div>
+
+<div style="position: absolute; top: 10px; left: 10px; background: white; padding: 10px; z-index: 1000; border-radius: 8px; font-size: 14px;">
+  <strong>Filter:</strong><br>
+  <label><input type="checkbox" checked onchange="toggleLayer(watchLayer, this.checked)"> Tornado Watches</label><br>
+  <label><input type="checkbox" checked onchange="toggleLayer(warningLayer, this.checked)"> Tornado Warnings</label><br>
+  <label><input type="checkbox" checked onchange="toggleLayer(alertLayer, this.checked)"> General Alerts</label><br>
+  <label><input type="checkbox" checked onchange="toggleLayer(fireLayer, this.checked)"> Fires</label><br>
+  <label><input type="checkbox" checked onchange="toggleLayer(emergencyLayer, this.checked)"> Emergency Alerts</label>
+</div>
+
+<script>
+function toggleLayer(layer, visible) {
+  if (visible) {
+    map.addLayer(layer);
+  } else {
+    map.removeLayer(layer);
+  }
+}
+</script>
 </body>
 </html>
