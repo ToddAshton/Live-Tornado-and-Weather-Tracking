@@ -172,7 +172,8 @@ const map = L.map('map').setView([30, -95], 3.5);
       iconAnchor: [16, 32],
     });
 
-    let watchLayer = L.layerGroup().addTo(map);
+    let watchLayer = L.markerClusterGroup();
+map.addLayer(watchLayer);
     let warningLayer = L.geoJSON(null, {
       style: { color: 'red', weight: 2, fillColor: 'red', fillOpacity: 0.4 }
     }).addTo(map);
@@ -275,17 +276,17 @@ alertLayer.addLayer(marker);
     
     
   </script>
-<div style="position: absolute; top: 10px; right: 10px; background: white; padding: 10px; z-index: 1000; border-radius: 8px; font-size: 14px;">
+<div id="sidebarToggle" style="position: absolute; top: 10px; left: 10px; z-index: 1001; background: white; padding: 6px 10px; border-radius: 5px; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.2); font-size: 14px;">☰ Map Panel</div>
+
+<div id="sidebar" style="position: absolute; top: 50px; left: 10px; background: white; padding: 10px; z-index: 1000; border-radius: 8px; font-size: 14px; width: 250px; display: none; box-shadow: 0 0 10px rgba(0,0,0,0.3);">
   <strong>Legend:</strong><br>
   <span style="color:red;">⬤</span> Tornado Warning<br>
   <img src="https://cdn-icons-png.flaticon.com/512/616/616655.png" width="16" height="16"> Tornado Watch<br>
   <span style="color:blue;">⬤</span> General Alert<br>
   <span style="color:purple;">⬤</span> Canada Alert<br>
   <span style="color:orange;">⬤</span> Fire / Global Alert<br>
-  <span style="color:black;">⬤</span> Emergency Alert
-</div>
+  <span style="color:black;">⬤</span> Emergency Alert<br><br>
 
-<div style="position: absolute; top: 10px; left: 10px; background: white; padding: 10px; z-index: 1000; border-radius: 8px; font-size: 14px;">
   <strong>Filter:</strong><br>
   <label><input type="checkbox" checked onchange="toggleLayer(watchLayer, this.checked)"> Tornado Watches</label><br>
   <label><input type="checkbox" checked onchange="toggleLayer(warningLayer, this.checked)"> Tornado Warnings</label><br>
@@ -293,6 +294,13 @@ alertLayer.addLayer(marker);
   <label><input type="checkbox" checked onchange="toggleLayer(fireLayer, this.checked)"> Fires</label><br>
   <label><input type="checkbox" checked onchange="toggleLayer(emergencyLayer, this.checked)"> Emergency Alerts</label>
 </div>
+
+<script>
+document.getElementById('sidebarToggle').onclick = function () {
+  const sidebar = document.getElementById('sidebar');
+  sidebar.style.display = (sidebar.style.display === 'none') ? 'block' : 'none';
+};
+</script>
 
 <script>
 function toggleLayer(layer, visible) {
