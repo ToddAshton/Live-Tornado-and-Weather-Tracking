@@ -17,7 +17,9 @@
 <body>
   <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js">async function fetchEmergencyAlerts() {
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+async function fetchEmergencyAlerts() {
   emergencyLayer.clearLayers();
   const url = 'https://api.weather.gov/alerts/active';
   try {
@@ -60,6 +62,7 @@
     console.error('Failed to fetch emergency alerts:', error);
   }
 }
+
 </script>
 <script>
 async function fetchFires() {
@@ -195,11 +198,13 @@ map.addLayer(emergencyLayer);
 
     L.control.layers(null, overlays, { collapsed: false }).addTo(map);
 
-fetchTornadoData();
-fetchCanadaAlerts();
-fetchOpenWeatherGlobalAlerts();
-fetchFires();
-fetchEmergencyAlerts();
+window.onload = function() {
+  fetchTornadoData();
+  fetchCanadaAlerts();
+  fetchOpenWeatherGlobalAlerts();
+  fetchFires();
+  fetchEmergencyAlerts();
+};
 setInterval(fetchTornadoData, 60000);
 setInterval(fetchCanadaAlerts, 60000);
 setInterval(fetchOpenWeatherGlobalAlerts, 60000);
