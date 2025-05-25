@@ -61,6 +61,8 @@ async function fetchTornadoData() {
     }
     if (isNaN(centerLat) || isNaN(centerLng)) continue;
     const headline = alert.properties.headline;
+    const desc = alert.properties.description || '';
+
     if (event === 'Tornado Watch') {
       const marker = L.marker([centerLat, centerLng], { icon: tornadoIcon })
         .bindPopup(`<b>${headline}</b>`);
@@ -73,6 +75,22 @@ async function fetchTornadoData() {
         fillOpacity: 0.4
       }).bindPopup(`<b>${headline}</b>`);
       warningLayer.addLayer(shape);
+    } else if (event.toLowerCase().includes('emergency')) {
+      const marker = L.circleMarker([centerLat, centerLng], {
+        radius: 8,
+        color: 'black',
+        fillColor: 'black',
+        fillOpacity: 0.8
+      }).bindPopup(`<b>🚨 Emergency Alert</b><br>${headline}<br>${desc}`);
+      emergencyLayer.addLayer(marker);
+    } else {
+      const marker = L.circleMarker([centerLat, centerLng], {
+        radius: 6,
+        color: 'blue',
+        fillColor: 'blue',
+        fillOpacity: 0.6
+      }).bindPopup(`<b>${headline}</b><br>${desc}`);
+      alertLayer.addLayer(marker);
     }
   }
 
@@ -82,9 +100,57 @@ async function fetchTornadoData() {
   watchLayer.addLayer(testMarker);
 }
 
+async function fetchFires() {
+  fireLayer.clearLayers();
+  const response = await fetch('https://tornado-proxy.onrender.com/api/fires');
+  const data = await response.json();
+  for (const feature of data.features) {
+    const coords = feature.geometry.coordinates;
+    const lat = coords[1];
+    const lon = coords[0];
+    const marker = L.circleMarker([lat, lon], {
+      radius: 4,
+      color: 'orange',
+      fillColor: 'orange',
+      fillOpacity: 0.7
+    }).bindPopup(`<b>🔥 Fire Detected</b><br>Latitude: ${lat}<br>Longitude: ${lon}`);
+    fireLayer.addLayer(marker);
+  }
+}
+
+async function fetchCanadaAlerts() {
+  alertLayer.clearLayers();
+  const response = await fetch('https://tornado-proxy.onrender.com/api/canada-alerts');
+  const xmlText = await response.text();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(xmlText, 'text/xml');
+  const entries = xml.getElementsByTagName('entry');
+  for (let entry of entries) {
+    const title = entry.getElementsByTagName('title')[0]?.textContent;
+    const polygon = entry.getElementsByTagName('cap:polygon')[0]?.textContent;
+    if (!polygon) continue;
+    const parts = polygon.split(' ');
+    const lon = parseFloat(parts[0]);
+    const lat = parseFloat(parts[1]);
+    if (!isNaN(lat) && !isNaN(lon)) {
+      const marker = L.circleMarker([lat, lon], {
+        radius: 6,
+        color: 'purple',
+        fillColor: 'purple',
+        fillOpacity: 0.6
+      }).bindPopup(`<b>Canada Alert</b><br>${title}`);
+      alertLayer.addLayer(marker);
+    }
+  }
+}
+
 window.onload = function () {
   fetchTornadoData();
+  fetchFires();
+  fetchCanadaAlerts();
   setInterval(fetchTornadoData, 60000);
+  setInterval(fetchFires, 60000);
+  setInterval(fetchCanadaAlerts, 60000);
 };
 </script>
 
